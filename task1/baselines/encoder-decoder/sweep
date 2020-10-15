@@ -20,6 +20,8 @@ readonly DROPOUTS=(.1 .2 .3)
 # Prediction options.
 readonly BEAM=5
 
+readonly OUTPUT_DIR="/data/echau18/loanwords/lstm"
+
 train() {
     local -r CP="$1"; shift
     fairseq-train \
@@ -121,13 +123,13 @@ main() {
         for BATCH in "${BATCHES[@]}"; do
             for DROPOUT in "${DROPOUTS[@]}"; do
                 small_encoder; small_decoder
-                train_evaluate "checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-s-s"
+                train_evaluate "${OUTPUT_DIR}/checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-s-s"
                 small_encoder; large_decoder
-                train_evaluate "checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-s-l"
+                train_evaluate "${OUTPUT_DIR}/checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-s-l"
                 large_encoder; small_decoder
-                train_evaluate "checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-l-s"
+                train_evaluate "${OUTPUT_DIR}/checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-l-s"
                 large_encoder; large_decoder
-                train_evaluate "checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-l-l"
+                train_evaluate "${OUTPUT_DIR}/checkpoints/${LANGUAGE}-${BATCH}-${DROPOUT}-l-l"
             done
         done
     done
