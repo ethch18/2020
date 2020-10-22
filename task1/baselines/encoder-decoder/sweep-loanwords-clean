@@ -51,7 +51,6 @@ train() {
         --batch-size="${BATCH}" \
         --max-update="${MAX_UPDATE}" \
         --save-interval="${SAVE_INTERVAL}" \
-        --max-epoch 50 \
         "$@"   # In case we need more configuration control.
 }
 
