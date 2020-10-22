@@ -51,7 +51,6 @@ train() {
         --batch-size="${BATCH}" \
         --max-update="${MAX_UPDATE}" \
         --save-interval="${SAVE_INTERVAL}" \
-        --max-epoch 50 \
         "$@"   # In case we need more configuration control.
 }
 
@@ -87,7 +86,6 @@ evaluate() {
             > "${TSV}"
         # Applies the evaluation script to the TSV file.
         ../../evaluation/./evaluate.py "${TSV}" > "${RES}" 2> /dev/null
-        echo "Phew"
         # Cleans up intermediate files.
         rm -f "${OUT}" "${TSV}"
     done
@@ -98,7 +96,6 @@ train_evaluate() {
     train "${CP}"
     evaluate "${CP}" dev
     evaluate "${CP}" test
-    exit
     rm -f "${CP}"/checkpoint[1-9]*.pt
 }
 
