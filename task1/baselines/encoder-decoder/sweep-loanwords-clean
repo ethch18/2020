@@ -51,6 +51,7 @@ train() {
         --batch-size="${BATCH}" \
         --max-update="${MAX_UPDATE}" \
         --save-interval="${SAVE_INTERVAL}" \
+        --max-epoch 50 \
         "$@"   # In case we need more configuration control.
 }
 
@@ -80,9 +81,18 @@ evaluate() {
             --no-progress-bar \
             > "${OUT}"
         # Extracts the predictions into a TSV file.
+        # For our fine-grained metrics, we can't have <<unk>> tokens.  Instead,
+        # we need to get the original values from the input data.
+        # paste \
+        #     <(cat "${OUT}" | grep '^T-' | sed "s/T-//" | sort -n | cut -f2) \
+        #     <(cat "${OUT}" | grep '^H-' | sed "s/H-//" | sort -n | cut -f3) \
+        #     > "${TSV}"
+
+        # fairseq-generate shuffles, so we need to reconstruct the H lines
+        # by their index
         paste \
-            <(cat "${OUT}" | grep '^T-' | cut -f2) \
-            <(cat "${OUT}" | grep '^H-' | cut -f3) \
+            <(cat "../../loanwords-data-cleaned/${MODE}/${LANGUAGE}_${MODE}.tsv" | cut -f2) \
+            <(cat "${OUT}" | grep '^H-' | sed "s/H-//" | sort -n | cut -f3) \
             > "${TSV}"
         # Applies the evaluation script to the TSV file.
         ../../evaluation/./evaluate.py "${TSV}" > "${RES}" 2> /dev/null
