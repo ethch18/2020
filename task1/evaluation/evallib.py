@@ -9,9 +9,13 @@ import numpy  # type: ignore
 
 from typing import Any, Iterator, List, Tuple
 
+from abydos.distance import PhoneticEditDistance
+
 
 Labels = List[Any]
 
+Metrics = [PhoneticEditDistance(vowel_ignorance=True), \
+        PhoneticEditDistance(vowel_dominance=True)]
 
 def edit_distance(x: Labels, y: Labels) -> int:
     # For a more expressive version of the same, see:
@@ -37,14 +41,14 @@ def edit_distance(x: Labels, y: Labels) -> int:
 def score(gold: Labels, hypo: Labels) -> Tuple[int, int]:
     """Computes sufficient statistics for LER calculation."""
     edits = edit_distance(gold, hypo)
+    aux_dist = [metric.dist_abs(''.join(gold), ''.join(hypo)) for metric in Metrics]
     if edits:
         logging.warning(
             "Incorrect prediction:\t%r (predicted: %r)",
             " ".join(gold),
             " ".join(hypo),
         )
-    return (edits, len(gold))
-
+    return (edits, len(gold), aux_dist)
 
 def tsv_reader(path: str) -> Iterator[Tuple[Labels, Labels]]:
     """Reads pairs of strings from a TSV filepath."""

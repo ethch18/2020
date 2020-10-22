@@ -5,6 +5,8 @@ import sys
 
 wers = {}
 pers = {}
+ped_ig = {}
+ped_dom = {}
 
 main_path = sys.argv[1]
 topk = int(sys.argv[2])
@@ -16,17 +18,26 @@ for run in os.listdir(main_path):
     if run_lang not in wers:
         wers[run_lang] = []
         pers[run_lang] = []
+        ped_ig[run_lang] = []
+        ped_dom[run_lang] = []
     for ckpt in os.listdir(run_path):
         if split in ckpt:
             with open(os.path.join(run_path, ckpt)) as f:
                 for i, line in enumerate(f):
                     if i == 0:
                         wer = float(line.strip().split('\t')[1])
-                    else:
+                    elif i == 1:
                         per = float(line.strip().split('\t')[1])
-            report = f"{run}/{ckpt}: WER {wer}, PER {per}"
+                    elif i == 2:
+                        ped_ig = float(line.strip().split('\t')[1])
+                    else:
+                        ped_dom = float(line.strip().split('\t')[1])
+            report = f"{run}/{ckpt}: WER {wer}, PER {per}, PED_IG: {ped_ig}, "
+                     f"PED_DOM: {ped_dom}"
             wers[run_lang].append((wer, report))
             pers[run_lang].append((per, report))
+            ped_ig[run_lang].append((ped_ig, report))
+            ped_dom[run_lang].append((ped_dom, report))
 
 def takeTopK(k, lst):
     lst.sort(key=lambda tup: tup[0], reverse=False)
@@ -43,3 +54,16 @@ for lang, lst in pers.items():
     print(lang)
     for _, report in takeTopK(topk, lst):
         print("    ", report)
+
+print("======By PED_IG======")
+for lang, lst in ped_ig.items():
+    print(lang)
+    for _, report in takeTopK(topk, lst):
+        print("    ", report)
+
+print("======By PED_DOM======")
+for lang, lst in ped_dom.items():
+    print(lang)
+    for _, report in takeTopK(topk, lst):
+        print("    ", report)
+
