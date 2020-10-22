@@ -7,6 +7,8 @@ wers = {}
 pers = {}
 ped_ig = {}
 ped_dom = {}
+ped_nof = {}
+ped = {}
 
 main_path = sys.argv[1]
 topk = int(sys.argv[2])
@@ -20,6 +22,8 @@ for run in os.listdir(main_path):
         pers[run_lang] = []
         ped_ig[run_lang] = []
         ped_dom[run_lang] = []
+        ped_nof[run_lang] = []
+        ped[run_lang] = []
     for ckpt in os.listdir(run_path):
         if split in ckpt:
             with open(os.path.join(run_path, ckpt)) as f:
@@ -30,18 +34,26 @@ for run in os.listdir(main_path):
                         per = float(line.strip().split('\t')[1])
                     elif i == 2:
                         ped_ig = float(line.strip().split('\t')[1])
-                    else:
+                    elif i == 3:
                         ped_dom = float(line.strip().split('\t')[1])
-            report = f"{run}/{ckpt}: WER {wer}, PER {per}, PED_IG: {ped_ig}, "
-                     f"PED_DOM: {ped_dom}"
+                    elif i == 4:
+                        ped_nof = float(line.strip().split('\t')[1])
+                    else:
+                        ped = float(line.strip().split('\t')[1])
+            report = f"{run}/{ckpt}: WER {wer}, PER {per}, PED_IG: {ped_ig}, " \
+                     f"PED_DOM: {ped_dom}, PED_NOF: {ped_nof}, PED: {ped}"
             wers[run_lang].append((wer, report))
             pers[run_lang].append((per, report))
             ped_ig[run_lang].append((ped_ig, report))
             ped_dom[run_lang].append((ped_dom, report))
+            ped_nof[run_lang].append((ped_nof, report))
+            ped[run_lang].append((ped, report))
+
 
 def takeTopK(k, lst):
     lst.sort(key=lambda tup: tup[0], reverse=False)
     return lst[:k]
+
 
 print("======By WER======")
 for lang, lst in wers.items():
@@ -67,3 +79,14 @@ for lang, lst in ped_dom.items():
     for _, report in takeTopK(topk, lst):
         print("    ", report)
 
+print("======By PED_NOF======")
+for lang, lst in ped_nof.items():
+    print(lang)
+    for _, report in takeTopK(topk, lst):
+        print("    ", report)
+
+print("======By PED======")
+for lang, lst in ped.items():
+    print(lang)
+    for _, report in takeTopK(topk, lst):
+        print("    ", report)

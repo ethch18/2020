@@ -14,8 +14,11 @@ from abydos.distance import PhoneticEditDistance
 
 Labels = List[Any]
 
-Metrics = [PhoneticEditDistance(vowel_ignorance=True), \
-        PhoneticEditDistance(vowel_dominance=True)]
+Metrics = [PhoneticEditDistance(vowel_ignorance=True),
+           PhoneticEditDistance(vowel_dominance=True),
+           PhoneticEditDistance(vowel_ignorance=True, no_features=True),
+           PhoneticEditDistance()]
+
 
 def edit_distance(x: Labels, y: Labels) -> int:
     # For a more expressive version of the same, see:
@@ -41,7 +44,8 @@ def edit_distance(x: Labels, y: Labels) -> int:
 def score(gold: Labels, hypo: Labels) -> Tuple[int, int]:
     """Computes sufficient statistics for LER calculation."""
     edits = edit_distance(gold, hypo)
-    aux_dist = [metric.dist_abs(''.join(gold), ''.join(hypo)) for metric in Metrics]
+    aux_dist = [metric.dist_abs(''.join(gold), ''.join(hypo))
+                for metric in Metrics]
     if edits:
         logging.warning(
             "Incorrect prediction:\t%r (predicted: %r)",
@@ -50,11 +54,13 @@ def score(gold: Labels, hypo: Labels) -> Tuple[int, int]:
         )
     return (edits, len(gold), aux_dist)
 
+
 def tsv_reader(path: str) -> Iterator[Tuple[Labels, Labels]]:
     """Reads pairs of strings from a TSV filepath."""
     with open(path, "r") as source:
         for line in source:
             (gold, hypo) = line.split("\t", 1)
+
             # Stripping is performed after the fact so the previous line
             # doesn't fail when `hypo` is null.
             hypo = hypo.rstrip()
