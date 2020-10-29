@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly LANGUAGE="$1"; shift
+readonly CHECKPOINT="$1"; shift
+# "valid" or "test"
+readonly PARTITION="$1"; shift
+readonly OUTPUT_FILE_PARTIAL="$1"; shift
+
+readonly ROOT="/data/echau18/loanwords/experimental/lstm-preprocess-final/checkpoints"
+readonly OUTPUT_FILE="/data/echau18/loanwords/experimental/lstm-preprocess-final/predictions/${OUTPUT_FILE_PARTIAL}"
+
+fairseq-generate "loanwords-data-cleaned-bin/${LANGUAGE}/" \
+    --gen-subset $PARTITION \
+    --source-lang "${LANGUAGE}.graphemes" \
+    --target-lang "${LANGUAGE}.phonemes" \
+    --path "${ROOT}/${CHECKPOINT}" \
+    --beam 5 \
+    "$@" \
+  > "${OUTPUT_FILE}.TEMP"
+
+[ $PARTITION = "valid" ] && RAW_PART="dev" || RAW_PART="test"
+
+paste \
+    <(cat "../../loanwords-data-cleaned/${RAW_PART}/${LANGUAGE}_${RAW_PART}.tsv" | cut -f2) \
+    <(cat "${OUTPUT_FILE}.TEMP" | grep '^H-' | sed "s/H-//" | sort -n | cut -f3) \
+    > "${OUTPUT_FILE}.tsv"
+# Applies the evaluation script to the TSV file.
+../../evaluation/./evaluate.py "${OUTPUT_FILE}.tsv" 2> /dev/null
+
+rm -f "${OUTPUT_FILE}.TEMP"
+
