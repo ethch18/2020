@@ -103,8 +103,11 @@ evaluate() {
 train_evaluate() {
     local -r CP="$1"; shift
     train "${CP}"
+    local CVD="$CUDA_VISIBLE_DEVICES"
+    export CUDA_VISIBLE_DEVICES=""
     evaluate "${CP}" dev
     evaluate "${CP}" test
+    export CUDA_VISIBLE_DEVICES="$CVD"
     # rm -f "${CP}"/checkpoint[1-9]*.pt
 }
 
