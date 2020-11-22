@@ -40,6 +40,10 @@ for run in os.listdir(main_path):
                         ped_nof = float(line.strip().split('\t')[1])
                     else:
                         ped = float(line.strip().split('\t')[1])
+                    ped_ig = None
+                    ped_dom = None
+                    ped_nof = None
+                    ped = None
             report = f"{run}/{ckpt}: WER {wer}, PER {per}, PED_IG: {ped_ig}, " \
                      f"PED_DOM: {ped_dom}, PED_NOF: {ped_nof}, PED: {ped}"
             wers[run_lang].append((wer, report))
