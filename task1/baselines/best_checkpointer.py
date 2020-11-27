@@ -17,6 +17,8 @@ split = sys.argv[3]
 for run in os.listdir(main_path):
     run_path = os.path.join(main_path, run)
     run_lang = run[:3]
+    if run_lang not in ['fre', 'ita', 'rus']:
+        continue
     if run_lang not in wers:
         wers[run_lang] = []
         pers[run_lang] = []
@@ -40,10 +42,10 @@ for run in os.listdir(main_path):
                         ped_nof = float(line.strip().split('\t')[1])
                     else:
                         ped = float(line.strip().split('\t')[1])
-                    ped_ig = None
-                    ped_dom = None
-                    ped_nof = None
-                    ped = None
+                    # ped_ig = None
+                    # ped_dom = None
+                    # ped_nof = None
+                    # ped = None
             report = f"{run}/{ckpt}: WER {wer}, PER {per}, PED_IG: {ped_ig}, " \
                      f"PED_DOM: {ped_dom}, PED_NOF: {ped_nof}, PED: {ped}"
             wers[run_lang].append((wer, report))
