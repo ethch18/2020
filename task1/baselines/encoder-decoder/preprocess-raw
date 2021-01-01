@@ -1,0 +1,50 @@
+#!/bin/bash
+# Input: target grapheme \t source grapheme \t target rom \t source rom
+# Output: source grapheme \t source rom \t source phoneme \t target grapheme 
+# \t target rom \t target phoneme \t label
+
+set -euo pipefail
+
+readonly RAW_FILE="$1"; shift
+readonly TARGET_LANGUAGE="$1"; shift
+readonly TARGET_CKPT="$1"; shift
+readonly SOURCE_LANGUAGE="$1"; shift
+readonly SOURCE_CKPT="$1"; shift
+readonly OUTPUT_FILE="$1"; shift
+
+readonly ROOT="/data/echau18/loanwords/experimental/lstm-preprocess-final/checkpoints"
+
+cut -f1 $RAW_FILE > "${OUTPUT_FILE}.TARGET.RAW"
+cut -f2 $RAW_FILE > "${OUTPUT_FILE}.SOURCE.RAW"
+
+python spacify.py "${OUTPUT_FILE}.SOURCE.RAW" > "${OUTPUT_FILE}.SOURCE.RAW.SPACE"
+python spacify.py "${OUTPUT_FILE}.TARGET.RAW" > "${OUTPUT_FILE}.TARGET.RAW.SPACE"
+
+fairseq-interactive "loanwords-data-cleaned-bin/${SOURCE_LANGUAGE}" \
+    --source-lang "${SOURCE_LANGUAGE}.graphemes" \
+    --target-lang "${SOURCE_LANGUAGE}.phonemes" \
+    --path "${ROOT}/${SOURCE_CKPT}" \
+    --beam 5 \
+    --input "${OUTPUT_FILE}.SOURCE.RAW.SPACE" \
+    --tokenizer space \
+    > "${OUTPUT_FILE}.SOURCE.TEMP"
+
+fairseq-interactive "loanwords-data-cleaned-bin/${TARGET_LANGUAGE}" \
+    --source-lang "${TARGET_LANGUAGE}.graphemes" \
+    --target-lang "${TARGET_LANGUAGE}.phonemes" \
+    --path "${ROOT}/${TARGET_CKPT}" \
+    --beam 5 \
+    --input "${OUTPUT_FILE}.TARGET.RAW.SPACE" \
+    --tokenizer space \
+    > "${OUTPUT_FILE}.TARGET.TEMP"
+
+paste \
+    <(cat "${OUTPUT_FILE}.SOURCE.RAW") \
+    <(cat $RAW_FILE | cut -f4) \
+    <(cat "${OUTPUT_FILE}.SOURCE.TEMP" | grep '^H-' | cut -f3) \
+    <(cat "${OUTPUT_FILE}.TARGET.RAW") \
+    <(cat $RAW_FILE | cut -f3) \
+    <(cat "${OUTPUT_FILE}.TARGET.TEMP" | grep '^H-' | cut -f3) \
+    > $OUTPUT_FILE
+
+rm -f ${OUTPUT_FILE}.SOURCE* ${OUTPUT_FILE}.TARGET*
